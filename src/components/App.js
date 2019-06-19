@@ -1,14 +1,14 @@
 import React from 'react';
 import '../css/App.css';
 import IphoneX from './IphoneX';
-import ReactLogo from './ReactLogo';
+import Calculator from './calculator/Calculator';
+import buttons from './calculator/buttons-data';
 
 function App() {
   return (
     <div className="App">
       <IphoneX>
-        <p>Hello React ⚛️</p>
-        <ReactLogo />
+        <Calculator buttons={buttons}/>
       </IphoneX>
     </div>
   );
