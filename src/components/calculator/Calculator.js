@@ -6,51 +6,103 @@ class Calculator extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      display: '0',
-      operation: null,
-      leftOperand: null,
+      display: '',
+      currentOperand: 'left',
+      operation: '',
+      leftOperand: '',
+      rightOperand: '',
+      result: '',
     };
 
     this.displayValue = this.displayValue.bind(this);
     this.setOperation = this.setOperation.bind(this);
+    this.calculateResult = this.calculateResult.bind(this);
+    this.showResult = this.showResult.bind(this);
   }
 
   displayValue(value) {
     this.setState(state => {
-      if (state.display === '0' || state.leftOperand) {
+    
+      if (state.currentOperand === 'left') {
         return {
-          display: value,
+          display: 'left',
+          leftOperand: state.leftOperand + value,
         };
       }
 
-      return {
-        display: state.display + value,
-      };
+      if (state.currentOperand === 'right') {
+        return {
+          display: 'right',
+          rightOperand: state.rightOperand + value,
+        };
+      }
     });
   }
 
   setOperation(operation) {
     this.setState(state => {
-      if (state.leftOperand) {
-        const rightOperand = state.display;
-        const result = eval(
-          `${state.leftOperand} ${state.operation} ${rightOperand}`,
-        );
+      if (state.rightOperand) {
         return {
-          operation: operation === "=" ? null : operation,
-          display: result,
-          leftOperand: operation === "=" ? null : result,
+          operation,
+          display: 'left',
+          currentOperand: 'right',
+          leftOperand: this.calculateResult({
+            leftOperand: state.leftOperand,
+            operation: state.operation,
+            rightOperand: state.rightOperand,
+          }),
+          rightOperand: '',
         };
       }
       return {
         operation,
-        leftOperand: state.display,
+        display: 'left',
+        currentOperand: 'right',
       };
     });
   }
 
+  showResult() {
+    this.setState(state => {
+        return {
+          display: 'result',
+          currentOperand: 'left',
+          operation: '',
+          leftOperand: '',
+          rightOperand: '',
+          result: this.calculateResult({
+            leftOperand: state.leftOperand,
+            operation: state.operation,
+            rightOperand: state.rightOperand,
+          }),
+        }
+    }) 
+  }
+
+  calculateResult({leftOperand, operation, rightOperand}) {
+    const result = eval(`${leftOperand} ${operation} ${rightOperand}`);
+    return result;
+  }
+
+  getDisplayValue() {
+    const { display, leftOperand, rightOperand, result } = this.state;
+    switch(display) {
+      case 'left': 
+        return leftOperand;
+      case 'right': 
+        return rightOperand;
+      case 'result': 
+        return result;
+      default: 
+        return 0;
+    }
+  }
+
   render() {
-    const {display} = this.state;
+    const {display, rightOperand, leftOperand} = this.state;
+
+    const displayValue = this.getDisplayValue();
+    
     return (
       <div id="container">
         <input
@@ -58,7 +110,7 @@ class Calculator extends React.Component {
           name="output"
           id="output"
           inputMode="numeric"
-          value={display}
+          value={displayValue}
           disabled
         />
         <div className="grid-container">
@@ -109,7 +161,7 @@ class Calculator extends React.Component {
             type="operation"
             value="="
             operation="="
-            onClick={this.setOperation}
+            onClick={this.showResult}
           />
         </div>
       </div>
