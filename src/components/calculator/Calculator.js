@@ -2,6 +2,7 @@ import React from 'react';
 import '../../css/calculator.scss';
 import Button from './Button';
 import Display from './Display';
+import calculateResult from '../../utils/calculate-result';
 
 const DEFAULT_STATE = {
   display: '',
@@ -19,28 +20,52 @@ class Calculator extends React.Component {
 
     this.displayValue = this.displayValue.bind(this);
     this.setOperation = this.setOperation.bind(this);
-    this.calculateResult = this.calculateResult.bind(this);
     this.showResult = this.showResult.bind(this);
     this.reset = this.reset.bind(this);
     this.percentage = this.percentage.bind(this);
     this.toggleSign = this.toggleSign.bind(this);
+    this.handleDot = this.handleDot.bind(this);
+  }
+
+  handleDot(state) {
+    const {currentOperand} = state;
+    const display = currentOperand === 'leftOperand' ? 'left' : 'right';
+
+    if (!state[currentOperand]) {
+      return {
+        display,
+        [currentOperand]: `0.`,
+      };
+    }
+    if (state[currentOperand] && state[currentOperand].includes('.')) {
+      return {
+        display,
+        [currentOperand]: state[currentOperand],
+      };
+    }
   }
 
   displayValue(value) {
     this.setState(state => {
-      if (state.currentOperand === 'leftOperand') {
+      const {currentOperand} = state;
+      const display = currentOperand === 'leftOperand' ? 'left' : 'right';
+      const maxLength = state[currentOperand].includes('.') ? '9' : '8';
+
+      if (value === '.') {
+        this.handleDot(state);
+      }
+
+      if (state[currentOperand].length > maxLength) {
         return {
-          display: 'left',
-          leftOperand: state.leftOperand + value,
+          display,
+          [currentOperand]: state[currentOperand],
         };
       }
 
-      if (state.currentOperand === 'rightOperand') {
-        return {
-          display: 'right',
-          rightOperand: state.rightOperand + value,
-        };
-      }
+      return {
+        display,
+        [currentOperand]: state[currentOperand] + value,
+      };
     });
   }
 
@@ -51,7 +76,7 @@ class Calculator extends React.Component {
           operation,
           display: 'left',
           currentOperand: 'rightOperand',
-          leftOperand: this.calculateResult({
+          leftOperand: calculateResult({
             leftOperand: state.leftOperand,
             operation: state.operation,
             rightOperand: state.rightOperand,
@@ -75,7 +100,7 @@ class Calculator extends React.Component {
         operation: '',
         leftOperand: '',
         rightOperand: '',
-        result: this.calculateResult({
+        result: calculateResult({
           leftOperand: state.leftOperand,
           operation: state.operation,
           rightOperand: state.rightOperand,
@@ -102,20 +127,17 @@ class Calculator extends React.Component {
 
   toggleSign() {
     this.setState(state => {
-      const { currentOperand } = state;
+      const {currentOperand} = state;
       const currentOperandValue = state[currentOperand];
       const isPositive = +currentOperandValue > 0;
-      const toggleValue = isPositive ? `-${currentOperandValue}` : currentOperandValue.slice(1);
+      const toggleValue = isPositive
+        ? `-${currentOperandValue}`
+        : currentOperandValue.slice(1);
 
       return {
         [currentOperand]: toggleValue,
-      }
-    })
-  }
-
-  calculateResult({leftOperand, operation, rightOperand}) {
-    const result = eval(`${leftOperand} ${operation} ${rightOperand}`);
-    return result;
+      };
+    });
   }
 
   render() {
@@ -131,7 +153,7 @@ class Calculator extends React.Component {
         />
         <div className="grid-container">
           <Button type="calc" value="AC" onClick={this.reset} />
-          <Button type="calc" value="+/-" onClick={this.toggleSign}/>
+          <Button type="calc" value="+/-" onClick={this.toggleSign} />
           <Button type="calc" value="%" onClick={this.percentage} />
           <Button
             type="operation"
