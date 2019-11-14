@@ -24,6 +24,7 @@ function Display({display, leftOperand, rightOperand, result}) {
       type="text"
       name="output"
       id="output"
+      data-testid="result"
       inputMode="numeric"
       value={formatDisplayValue(displayValue)}
       style={{fontSize: calculateDisplayFontSize(displayValue)}}
